@@ -4,11 +4,18 @@ using Scalar.AspNetCore;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddOpenApi();
+
+builder.Services.AddStackExchangeRedisCache(options =>
+{
+    options.Configuration = 
+        builder.Configuration.GetConnectionString("RedisConnectionString");
+});
+
 builder.Services.AddHybridCache(options =>
 {
     options.DefaultEntryOptions = new HybridCacheEntryOptions
     {
-        Expiration = TimeSpan.FromSeconds(10),
+        Expiration = TimeSpan.FromSeconds(60),
         LocalCacheExpiration = TimeSpan.FromSeconds(10)
     };
 });
@@ -24,7 +31,7 @@ app.MapScalarApiReference(options =>
         .WithTitle("Hybrid cache API")
         .WithModels(false)
         .WithDefaultHttpClient(ScalarTarget.CSharp, ScalarClient.HttpClient)
-        .WithTheme(ScalarTheme.Kepler);
+        .WithTheme(ScalarTheme.Saturn);
 });
 
 app.UseHttpsRedirection();
@@ -40,7 +47,7 @@ app.MapGet("/get-cached-string", async (HybridCache cache, CancellationToken tok
 
 app.MapGet("/get-cached-item", async (HybridCache cache, CancellationToken token) =>
     {
-        string myKey = "my-key";
+        string myKey = "my-item";
         MyItem value = await GetValueAsync(cache, myKey, token);
     
         return Results.Ok(value);
